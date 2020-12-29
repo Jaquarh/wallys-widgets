@@ -89,8 +89,10 @@ class WallysWidgetsCalculator
         arsort($packSizes);
         
         if($this->widgetsRequired < 0) {
-            if($widgetsRequired - ($shift = array_shift($packSizes)) >= $this->widgetsRequired)
-                return [$shift => 1];
+            if($widgetsRequired - ($shift = array_shift($packSizes)) >= $this->widgetsRequired) {
+                if($widgetsRequired - $shift <= 0)
+                    return [$shift => 1];
+            }
             
             array_unshift($packSizes, $shift);
         }
@@ -185,6 +187,14 @@ class WallysWidgetsCalculator
                 ${$total} += $pack * $quantity;
             }
         }
+        
+        echo 'OUTA: <br />';
+        var_dump($outA);
+        echo '<br /> <br /> OUTB: <br />';
+        var_dump($outB);
+        echo '<br /> <br /> OUTPUT: <br />';
+        
+        echo "A: {$a} | B: {$b} <br />";
         
         if($a === $b) return $outA;
         return $a < $b ? $outA : $outB;
