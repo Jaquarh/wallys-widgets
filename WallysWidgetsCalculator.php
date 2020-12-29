@@ -46,20 +46,37 @@ class WallysWidgetsCalculator
         while($this->widgetsRequired !== 0):
             # Write to the packsizes with ones we can only work with
             $this->filterPackSizes();
+        
             # Pop the first element which will be the highest pack size
-            $highePackSize = array_shift($this->packSizes);
+            $highPackSize = array_shift($this->packSizes);
+            
+            # If null, we'll assume no more packs can be used, so we'll fail safe with the lowest pack that will bring it negative
+            if($highPackSize === null):
+                # Resort the packs replacing keys
+                rsort($packSizes);
+            
+                # Find the pack that'll bring it negative and break
+                while(true):
+                    if($this->widgetsRequired - end($packSizes) < 0):
+                        $this->assignPack(end($packSizes));
+                        break;
+                    endif;
+                    array_pop($packSizes);
+                endwhile;
+                
+                # This will return the packsAssigned
+                break;
+            endif;
+            
             # Calculate if we can use this pack
-            if(count($this->packSizes) !== 1 && $this->widgetsRequired - $highePackSize >= 0):
+            if(count($this->packSizes) !== 1 && $this->widgetsRequired - $highPackSize >= 0):
                 # We can use this
-                $this->assignPack($highePackSize);
+                $this->assignPack($highPackSize);
                 # Reshift this pack to the array
-                array_unshift($this->packSizes, $highePackSize);
+                array_unshift($this->packSizes, $highPackSize);
             else:
-                # We must check how many times this pack can fit into the remaining
-                $packQuantity = intval(floor($this->widgetsRequired / $highePackSize), 0);
-                for($i = 1; $i <= $packQuantity; $i++):
-                    $this->assignPack($highePackSize);
-                endfor;
+                # Check how many times this pack can fit into the remaining and assign
+                $this->assignAnyRemaining($highPackSize);
             endif;
         endwhile;
         
@@ -108,5 +125,12 @@ class WallysWidgetsCalculator
         }
         
         $this->packsAssigned[$packSize] = 1;
+    }
+    
+    public function assignAnyRemaining(int $pack): void
+    {
+        for($i = 1; $i <= intval(floor($this->widgetsRequired / $pack), 0); $i++):
+            $this->assignPack($pack);
+        endfor;
     }
 }

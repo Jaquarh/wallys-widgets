@@ -8,5 +8,21 @@
 
 require 'WallysWidgetsCalculator.php';
 
-var_dump((new WallysWidgetsCalculator)
-        ->getPacks(8, [5, 2, 3, 1]));
+$widgetsRequired = 7234;
+
+$packs = (new WallysWidgetsCalculator)
+        ->getPacks($widgetsRequired, [70, 90]);
+
+$cost = 0;
+
+foreach($packs as $pack => $quantity):
+    $cost += $pack * $quantity;
+endforeach;
+
+echo "Widgets Required: {$widgetsRequired} <br /> <br />";
+
+var_dump($packs);
+
+$extra = $cost - $widgetsRequired;
+
+echo "<br /> <br />Total: {$cost} - you will recieve an extra {$extra} widgets due to buying in our packs.";
