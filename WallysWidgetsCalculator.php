@@ -158,6 +158,11 @@ class WallysWidgetsCalculator
         $this->packsAssigned[$packSize] = 1;
     }
     
+    /**
+     * This assigns the remaining widgets based on the remainder
+     * @param int $pack
+     * @return void
+     */
     private function assignAnyRemaining(int $pack): void
     {
         for($i = 1; $i <= intval(floor($this->widgetsRequired / $pack), 0); $i++):
@@ -165,21 +170,31 @@ class WallysWidgetsCalculator
         endfor;
     }
     
+    /**
+     * Since the highest value is used in the pack for the first deduction, sometimes, a lower
+     * pack size may provide a better solution as seen in the test cases like 4999 5000
+     * So we compare without the highest pack size and return the assigned packs based on the comparison 
+     * @return array
+     */
     protected function compare(): array
     {
+        # Get the keys and sort
         $packsUsed = array_keys(($outA = $this->packsAssigned));
         arsort($packsUsed);
         
+        # Remove the highest pack size to see if this gives a better result
         unset($this->packSizes[array_search($packsUsed[0], $this->packSizes)]);
         
         $this->compared = true;
         $this->packsAssigned = [];
         
+        // Re-run the test with one less pack
         $outB = $this->getPacks($this->widgetsRequired, $this->packSizes);
         
         $a = 0;
         $b = 0;
         
+        # Addition of each to work out the remaining
         foreach(['outA' => 'a', 'outB' => 'b'] as $out => $total)
         {
             foreach(${$out} as $pack => $quantity)
@@ -187,16 +202,11 @@ class WallysWidgetsCalculator
                 ${$total} += $pack * $quantity;
             }
         }
-        /*
-        echo 'OUTA: <br />';
-        var_dump($outA);
-        echo '<br /> <br /> OUTB: <br />';
-        var_dump($outB);
-        echo '<br /> <br /> OUTPUT: <br />';
         
-        echo "A: {$a} | B: {$b} <br />";
-        */
+        # If both are the same, assume A is the best solution
         if($a === $b) return $outA;
+        
+        # Else, see which was better!
         return $a < $b ? $outA : $outB;
     }
 }
