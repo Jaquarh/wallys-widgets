@@ -3,6 +3,7 @@
 /**
  * @copyright (c) Kyle Jeynes <kylejeynes97@icloud.com>
  * @author Kyle Jeynes
+ * @TODO("I found that I need to sort the arrays based on division of the widget requirement, highest to lowest")
  */
 
 class WallysWidgetsCalculator
@@ -103,6 +104,24 @@ class WallysWidgetsCalculator
         });
         
         # Sort the new array descending and work from high to low
+        
+        /* --> This was inspired by the failure of the 2600 test due to 300 x2
+         * --> I thought that I could sort the packs based on how they divided into the required widgets
+         * --> unfortunatley, this gave me the output 250x11
+         * --> but I highly assume now that the perfect solution falls down to the way the packs are sorted.
+        
+            $divisions = [];
+
+            foreach($this->packSizes as $key => $val):
+                $divisions[$key] = intval($this->widgetsRequired / $val, 0);
+            endforeach;
+
+            arsort($divisions);
+        
+            $this->packSizes = array_replace(array_flip(array_keys($divisions)), $this->packSizes);
+
+        */
+        
         arsort($this->packSizes);
     }
     
