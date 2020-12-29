@@ -187,7 +187,7 @@ class WallysWidgetsCalculator
                 ${$total} += $pack * $quantity;
             }
         }
-        
+        /*
         echo 'OUTA: <br />';
         var_dump($outA);
         echo '<br /> <br /> OUTB: <br />';
@@ -195,7 +195,7 @@ class WallysWidgetsCalculator
         echo '<br /> <br /> OUTPUT: <br />';
         
         echo "A: {$a} | B: {$b} <br />";
-        
+        */
         if($a === $b) return $outA;
         return $a < $b ? $outA : $outB;
     }
