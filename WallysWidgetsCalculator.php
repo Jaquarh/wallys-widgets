@@ -69,7 +69,7 @@ class WallysWidgetsCalculator
             endif;
             
             # Calculate if we can use this pack
-            if(count($this->packSizes) !== 1 && $this->widgetsRequired - $highPackSize >= 0):
+            if($this->widgetsRequired - $highPackSize >= 0):
                 # We can use this
                 $this->assignPack($highPackSize);
                 # Reshift this pack to the array
@@ -79,6 +79,14 @@ class WallysWidgetsCalculator
                 $this->assignAnyRemaining($highPackSize);
             endif;
         endwhile;
+        
+        arsort($packSizes);
+        
+        if($this->widgetsRequired < 0) {
+            if($widgetsRequired - ($shift = array_shift($packSizes)) >= $this->widgetsRequired) {
+                return [$shift => 1];
+            }
+        }
         
         return $this->packsAssigned;
     }

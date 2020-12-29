@@ -8,10 +8,10 @@
 
 require 'WallysWidgetsCalculator.php';
 
-$widgetsRequired = 2600;
+$widgetsRequired = 2001;
 
 $packs = (new WallysWidgetsCalculator)
-        ->getPacks($widgetsRequired, array(250, 300, 500, 1000, 2000, 5000));
+        ->getPacks($widgetsRequired, array(250, 500, 1000, 2000, 1999, 5000));
 
 $cost = 0;
 
