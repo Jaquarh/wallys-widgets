@@ -8,20 +8,26 @@
 class WallysWidgetsCalculator
 {
     /**
-     * 
-     * @var array Holds the pack sizes the company sells.
+     * Holds the pack sizes the company sells.
+     * @var array
      */
     protected array $packSizes = [];
     
     /**
-     * 
-     * @var int Holds the customers request of size.
+     * Checks if the compares been done once already
+     * @var bool
+     */
+    private bool $compared = false;
+    
+    /**
+     * Holds the customers request of size.
+     * @var int
      */
     protected int $widgetsRequired;
     
     /**
-     * 
-     * @var array Holds the assigned packs that best fit to the packSizes.
+     * Holds the assigned packs that best fit to the packSizes.
+     * @var array
      */
     protected array $packsAssigned = [];
 
@@ -83,12 +89,15 @@ class WallysWidgetsCalculator
         arsort($packSizes);
         
         if($this->widgetsRequired < 0) {
-            if($widgetsRequired - ($shift = array_shift($packSizes)) >= $this->widgetsRequired) {
+            if($widgetsRequired - ($shift = array_shift($packSizes)) >= $this->widgetsRequired)
                 return [$shift => 1];
-            }
+            
+            array_unshift($packSizes, $shift);
         }
         
-        return $this->packsAssigned;
+        $this->packSizes = $packSizes;
+        $this->widgetsRequired = $widgetsRequired;
+        return $this->compared ? $this->packsAssigned : $this->compare();
     }
     
     /**
@@ -147,10 +156,37 @@ class WallysWidgetsCalculator
         $this->packsAssigned[$packSize] = 1;
     }
     
-    public function assignAnyRemaining(int $pack): void
+    private function assignAnyRemaining(int $pack): void
     {
         for($i = 1; $i <= intval(floor($this->widgetsRequired / $pack), 0); $i++):
             $this->assignPack($pack);
         endfor;
+    }
+    
+    protected function compare(): array
+    {
+        $packsUsed = array_keys(($outA = $this->packsAssigned));
+        arsort($packsUsed);
+        
+        unset($this->packSizes[array_search($packsUsed[0], $this->packSizes)]);
+        
+        $this->compared = true;
+        $this->packsAssigned = [];
+        
+        $outB = $this->getPacks($this->widgetsRequired, $this->packSizes);
+        
+        $a = 0;
+        $b = 0;
+        
+        foreach(['outA' => 'a', 'outB' => 'b'] as $out => $total)
+        {
+            foreach(${$out} as $pack => $quantity)
+            {
+                ${$total} += $pack * $quantity;
+            }
+        }
+        
+        if($a === $b) return $outA;
+        return $a < $b ? $outA : $outB;
     }
 }

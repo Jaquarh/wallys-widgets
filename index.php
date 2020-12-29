@@ -11,7 +11,7 @@ require 'WallysWidgetsCalculator.php';
 $widgetsRequired = 2001;
 
 $packs = (new WallysWidgetsCalculator)
-        ->getPacks($widgetsRequired, array(250, 500, 1000, 2000, 1999, 5000));
+        ->getPacks($widgetsRequired,  array(250, 500, 1000, 2000, 1999, 5000));
 
 $cost = 0;
 
