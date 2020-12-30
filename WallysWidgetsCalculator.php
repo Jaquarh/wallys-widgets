@@ -1,28 +1,35 @@
 <?php
 
+/**
+ * @copyright (c) Kyle Jeynes <kylejeynes97@icloud.com>
+ * @author Kyle Jeynes
+ */
+
 class WallysWidgetsCalculator
 {
+    /**
+     * 
+     * @var array Holds the pack sizes the company sells.
+     */
     protected array $packSizes = [];
-    protected integer $widgetsRequired;
-    protected array $packsAssigned = [];
     
     /**
-     * Your solution should return an array with the pack sizes as the key
-     * and the number of packs in that size as the value.
-     *
-     * Pack sizes that are not required should not be included.
-     *
-     * Example:
-     *
-     * getPacks(251, [
-     *  250,
-     *  500,
-     *  1000
-     * ])
-     *
-     * should return:
-     *
-     * [500 => 1]
+     * 
+     * @var int Holds the customers request of size.
+     */
+    protected int $widgetsRequired;
+    
+    /**
+     * 
+     * @var array Holds the assigned packs that best fit to the packSizes.
+     */
+    protected array $packsAssigned = [];
+
+    /**
+     * Gets the packs based on the widgets required and packs being sold.
+     * @param int $widgetsRequired
+     * @param array $packSizes
+     * @return array
      */
     public function getPacks(int $widgetsRequired, array $packSizes): array
     {
@@ -49,8 +56,8 @@ class WallysWidgetsCalculator
                 array_unshift($this->packSizes, $highePackSize);
             else:
                 # We must check how many times this pack can fit into the remaining
-                $packQuantity = intval(floor($this->packSizes / $highePackSize), 0);
-                for($i = 1; $i >= $packQuantity; $i++):
+                $packQuantity = intval(floor($this->widgetsRequired / $highePackSize), 0);
+                for($i = 1; $i <= $packQuantity; $i++):
                     $this->assignPack($highePackSize);
                 endfor;
             endif;
@@ -75,7 +82,7 @@ class WallysWidgetsCalculator
     private function filterPackSizes(): void
     {
         $this->packSizes = array_filter($this->packSizes, function($pack) {
-            return $this->widgetsRequired <= $pack;
+            return $this->widgetsRequired >= $pack;
         });
         
         # Sort the new array descending and work from high to low
@@ -100,6 +107,6 @@ class WallysWidgetsCalculator
             return;
         }
         
-        $this->packSizes[$packsize] = 1;
+        $this->packsAssigned[$packSize] = 1;
     }
 }
