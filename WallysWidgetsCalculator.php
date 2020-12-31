@@ -86,6 +86,15 @@ class WallysWidgetsCalculator
          * $packSizes = array_unique(array_merge(array_keys($packSizes), $packSizesPotential)); --> when this is used instead of the if(count) and return
          * it works in index.php but fails PHPUnit
          */
+        
+        if(!$this->isCorrectPackSize(array_unique($packSizes)))
+        {
+            if(count($packSizesPotential) === 0)
+                $this->potentialPackSizes[] = $packSizes;
+            
+            if(count($packSizesPotential) !== 0)
+                $packSizes = array_unique(array_merge(array_keys($packSizes), $packSizesPotential));
+        }
 
         $this->widgetsRequired  = $widgetsRequired;
         $this->packSizes        = $packSizes;
