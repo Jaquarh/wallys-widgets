@@ -3,6 +3,8 @@
 /**
  * @copyright (c) Kyle Jeynes <kylejeynes97@icloud.com>
  * @author Kyle Jeynes
+ * 
+ * This requires PHP ^8 - To run PHPUnit tests on < 7.4, remove the string|null array|bool datatype notations in the functions.
  */
 
 class WallysWidgetsCalculator
@@ -35,22 +37,22 @@ class WallysWidgetsCalculator
      * Turns on and off debug mode
      * @var bool
      */
-    private bool $debug = true;
+    private bool $debug = false;
     
     /**
-     * 
+     * Since we shift arrays, we need a physical copy
      * @var int
      */
     private array $defaultPackSizes = [];
     
     /**
-     * 
+     * If 5000 are required, and there's a pack for 250 then it assumes 250 is a perfect fit, this helps avoid that
      * @var bool
      */
     private bool $foundExactDivision = false;
     
     /**
-     * 
+     * Check what iteration we are currently at
      * @var int
      */
     private int $iterations = 1;
@@ -122,9 +124,7 @@ class WallysWidgetsCalculator
         $this->log('assignPack', 'BEFORE | WITH: ' . $packSize . ' * ' . $quantity);
         
         if($this->widgetsRequired === 0)
-        {
             return;
-        }
         
         $this->deductWidgets($packSize * $quantity);
         
@@ -167,9 +167,7 @@ class WallysWidgetsCalculator
         while(($packSizes = $this->hasExactDivision()))
         {
             if($this->widgetsRequired === 0)
-            {
                 break;
-            }
             
             arsort($packSizes);
             $this->assignPack(intval($this->widgetsRequired / ($size = array_shift($packSizes)), 0), $size);
@@ -189,9 +187,7 @@ class WallysWidgetsCalculator
             $packSize = array_shift($this->packSizes);
             
             if($packSize === null)
-            {
                 break;
-            }
             
             if($this->widgetsRequired - $packSize >= 0)
             {
@@ -257,6 +253,10 @@ class WallysWidgetsCalculator
         $this->assignPack($quantity, $packSizeToUse);
     }
     
+    /**
+     * Compare all the possible solutions based on widget total or amount of quantity.
+     * @return array
+     */
     protected function compareArrayValuesSum(): array
     {
         $sum = $this->widgetsRequired;
@@ -290,6 +290,12 @@ class WallysWidgetsCalculator
         return $packToUse;
     }
     
+    /**
+     * Debug for me running on PHP ^8
+     * @param string $title
+     * @param string|null $message
+     * @return WallysWidgetsCalculator
+     */
     private function log(string $title, string|null $message): WallysWidgetsCalculator
     {
         if(!$this->debug)
