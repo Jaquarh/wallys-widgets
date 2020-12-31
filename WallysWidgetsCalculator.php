@@ -64,12 +64,12 @@ class WallysWidgetsCalculator
      * @return array
      */
     public function getPacks(int $widgetsRequired, array $packSizes, array $packSizesPotential = []): array
-    {
+    {/*
         if(!$this->isCorrectPackSize($packSizes))
         {
             // Fixes 4 more errors
             $packSizes = array_unique(array_merge(array_keys($packSizes), $packSizesPotential));
-        }
+        }*/
 
         $this->widgetsRequired  = $widgetsRequired;
         $this->packSizes        = $packSizes;
@@ -321,8 +321,6 @@ class WallysWidgetsCalculator
     
     protected function isCorrectPackSize(array $packSize)
     {
-        // Apparently, arsort was all that was needed to fix this from false returns in PHPUnit
-        arsort($packSize);
         return array_keys($packSize) === range(0, count($packSize) - 1);
     }
 }
