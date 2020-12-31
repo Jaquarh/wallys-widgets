@@ -10,6 +10,7 @@ require 'WallysWidgetsCalculator.php';
 
 $widgetsRequired = 750;
 
+// Perhaps we need to test array_keys for sure
 $packs = (new WallysWidgetsCalculator)
         ->getPacks(750, [500 => 1, 250 => 1]);
 
