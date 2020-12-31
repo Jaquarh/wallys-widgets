@@ -81,6 +81,11 @@ class WallysWidgetsCalculator
             return $this->getPacks($widgetsRequired, $packSizes);
         }
          --> This returns fine on my test but when PHPUnit runs it, it fails? */
+        
+        /*
+         * $packSizes = array_unique(array_merge(array_keys($packSizes), $packSizesPotential)); --> when this is used instead of the if(count) and return
+         * it works in index.php but fails PHPUnit
+         */
 
         $this->widgetsRequired  = $widgetsRequired;
         $this->packSizes        = $packSizes;
