@@ -65,6 +65,11 @@ class WallysWidgetsCalculator
      */
     public function getPacks(int $widgetsRequired, array $packSizes): array
     {
+        /*if(!$this->isCorrectPackSize($packSizes))
+        {
+            return $packSizes;
+        }*/
+        
         $this->widgetsRequired  = $widgetsRequired;
         $this->packSizes        = $packSizes;
         $this->defaultPackSizes = count($this->defaultPackSizes) === 0 ? $packSizes : $this->defaultPackSizes;
@@ -307,5 +312,10 @@ class WallysWidgetsCalculator
         echo "packSizes: " . implode(', ', array_values($this->packSizes)) . "<br />";
         echo "widgetsRequired: {$this->widgetsRequired}<br /> <br />";
         return $this;
+    }
+    
+    protected function isCorrectPackSize(array $packSize)
+    {
+        return array_keys($packSize) === range(0, count($packSize) - 1);
     }
 }
