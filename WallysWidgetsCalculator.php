@@ -11,26 +11,50 @@ class WallysWidgetsCalculator
      * Holds the pack sizes the company sells.
      * @var array
      */
-    protected array $packSizes = [];
-    
-    /**
-     * Checks if the compares been done once already
-     * @var bool
-     */
-    private bool $compared = false;
+    private array $packSizes = [];
     
     /**
      * Holds the customers request of size.
      * @var int
      */
-    protected int $widgetsRequired;
+    private int $widgetsRequired;
     
     /**
      * Holds the assigned packs that best fit to the packSizes.
      * @var array
      */
-    protected array $packsAssigned = [];
-
+    private array $packsAssigned = [];
+    
+    /**
+     * Multidimensional array holding all the possibiltiies.
+     * @var array
+     */
+    private array $potentialPackSizes = [];
+    
+    /**
+     * Turns on and off debug mode
+     * @var bool
+     */
+    private bool $debug = true;
+    
+    /**
+     * 
+     * @var int
+     */
+    private array $defaultPackSizes = [];
+    
+    /**
+     * 
+     * @var bool
+     */
+    private bool $foundExactDivision = false;
+    
+    /**
+     * 
+     * @var int
+     */
+    private int $iterations = 1;
+    
     /**
      * Gets the packs based on the widgets required and packs being sold.
      * @param int $widgetsRequired
@@ -39,174 +63,243 @@ class WallysWidgetsCalculator
      */
     public function getPacks(int $widgetsRequired, array $packSizes): array
     {
-        # Store the values in the object scope
-        $this->packSizes = array_values($packSizes);
-        # Store the required widgets into the object scope
-        $this->widgetsRequired = $widgetsRequired;
+        $this->widgetsRequired  = $widgetsRequired;
+        $this->packSizes        = $packSizes;
+        $this->defaultPackSizes = count($this->defaultPackSizes) === 0 ? $packSizes : $this->defaultPackSizes;
         
-        # Check for an exact match and return if there is
-        if($this->checkExactMatch())
-            return [$this->widgetsRequired => 1];
+        if($this->hasExactMatch())
+        {
+            $this->assignPack(1, $widgetsRequired);
+            return $this->getPacksAssigned();
+        }
         
-        # Update the widgetsRequired each time we assign a pack
-        while($this->widgetsRequired !== 0):
-            # Write to the packsizes with ones we can only work with
-            $this->filterPackSizes();
+        if(($packSize = $this->hasExactDivision()))
+        {
+            $this->assignAnyDividable();
+            $this->foundExactDivision = true;
+        }
+        else
+        {
+            $this->assignAnyByOrder();
+
+            $this->packSizes = $packSizes;
+            $this->assignRemaining();
+        }
         
-            # Pop the first element which will be the highest pack size
-            $highPackSize = array_shift($this->packSizes);
-            
-            # If null, we'll assume no more packs can be used, so we'll fail safe with the lowest pack that will bring it negative
-            if($highPackSize === null):
-                # Resort the packs replacing keys
-                rsort($packSizes);
-            
-                # Find the pack that'll bring it negative and break
-                while(true):
-                    if($this->widgetsRequired - end($packSizes) < 0):
-                        $this->assignPack(end($packSizes));
-                        break;
-                    endif;
-                    array_pop($packSizes);
-                endwhile;
-                
-                # This will return the packsAssigned
-                break;
-            endif;
-            
-            # Calculate if we can use this pack
-            if($this->widgetsRequired - $highPackSize >= 0):
-                # We can use this
-                $this->assignPack($highPackSize);
-                # Reshift this pack to the array
-                array_unshift($this->packSizes, $highPackSize);
-            else:
-                # Check how many times this pack can fit into the remaining and assign
-                $this->assignAnyRemaining($highPackSize);
-            endif;
-        endwhile;
+        $this->potentialPackSizes[] = $this->packsAssigned;
+        $this->packsAssigned = [];
         
         arsort($packSizes);
         
-        if($this->widgetsRequired < 0) {
-            if($widgetsRequired - ($shift = array_shift($packSizes)) >= $this->widgetsRequired) {
-                if($widgetsRequired - $shift <= 0)
-                    return [$shift => 1];
+        if($this->foundExactDivision)
+        {
+            if($this->iterations++ === 1)
+            {
+                $this->getPacks($widgetsRequired, $packSizes);
+                $this->widgetsRequired = $widgetsRequired;
+                return $this->compareArrayValuesSum();
             }
-            
-            array_unshift($packSizes, $shift);
         }
         
-        $this->packSizes = $packSizes;
+        if(($highestPackSize = array_shift($packSizes)) !== null && count($packSizes) !== 0)
+        {
+            $this->getPacks($widgetsRequired, $packSizes);
+        }
+
         $this->widgetsRequired = $widgetsRequired;
-        return $this->compared ? $this->packsAssigned : $this->compare();
+        
+        return $this->compareArrayValuesSum();
+        
     }
     
-    /**
-     * Checks for exact pack size match
-     * @return bool
-     */
-    private function checkExactMatch(): bool
+    protected function hasExactMatch(): bool
     {
         return in_array($this->widgetsRequired, $this->packSizes);
     }
     
-    /**
-     * Filters the packs for packs that are suitable for use and sorts them high to low.
-     * @return void
-     */
-    private function filterPackSizes(): void
+    protected function assignPack(int $quantity, int $packSize): void
     {
-        $this->packSizes = array_filter($this->packSizes, function($pack) {
-            return $this->widgetsRequired >= $pack;
-        });
+        $this->log('assignPack', 'BEFORE | WITH: ' . $packSize . ' * ' . $quantity);
         
-        # Sort the new array descending and work from high to low
-        arsort($this->packSizes);
-        
-        # See if any divide exactly
-        $division = [];
-        
-        foreach($this->packSizes as $key => $value):
-            $division[$key] = $this->widgetsRequired % $value === 0;
-        endforeach;
-        
-        if(!empty(($key = array_search(true, $division))))
+        if($this->widgetsRequired === 0)
         {
-            $this->packSizes = array_unique(array_merge([0 => $this->packSizes[$key]] + $this->packSizes));
-        }
-    }
-    
-    /**
-     * Assigns a pack to the packsAssigned array or increments the value.
-     * @param int $packSize
-     * @return type
-     */
-    private function assignPack(int $packSize): void
-    {
-        # Deduct the packsize from the widgetsRequired
-        $this->widgetsRequired = $this->widgetsRequired - $packSize;
-        
-        # isset() could be used here, also
-        if(in_array($packSize, array_keys($this->packsAssigned)))
-        {
-            # Increase the qauntity of the pack
-            $this->packsAssigned[$packSize]++;
             return;
         }
         
-        $this->packsAssigned[$packSize] = 1;
+        $this->deductWidgets($packSize * $quantity);
+        
+        $this->log('assignPack', 'AFTER');
+        
+        if(in_array($packSize, array_keys($this->packsAssigned)))
+        {
+            $this->packsAssigned[$packSize] += $quantity;
+            return;
+        }
+        
+        $this->packsAssigned[$packSize] = $quantity;
+    }
+    
+    protected function deductWidgets(int $widgets): void
+    {
+        $this->widgetsRequired -= $widgets;
+    }
+    
+    protected function getPacksAssigned(): array
+    {
+        return $this->packsAssigned;
+    }
+    
+    protected function hasExactDivision(): array|bool
+    {
+        $this->log('hasExactDivision', null);
+        
+        if($this->foundExactDivision) return false;
+        
+        return array_filter($this->packSizes, function($packSize) {
+            return $this->widgetsRequired % $packSize === 0;
+        }) ?? false;
+    }
+    
+    protected function assignAnyDividable(): WallysWidgetsCalculator
+    {
+        $this->log('assignAnyDividable', null);
+        
+        while(($packSizes = $this->hasExactDivision()))
+        {
+            if($this->widgetsRequired === 0)
+            {
+                break;
+            }
+            
+            arsort($packSizes);
+            $this->assignPack(intval($this->widgetsRequired / ($size = array_shift($packSizes)), 0), $size);
+        }
+        
+        return $this;
+    }
+    
+    protected function assignAnyByOrder(): void
+    {
+        $this->log('assignAnyByOrder', null);
+        
+        while($this->widgetsRequired >= 0)
+        {
+            $this->filterPackSizes();
+            
+            $packSize = array_shift($this->packSizes);
+            
+            if($packSize === null)
+            {
+                break;
+            }
+            
+            if($this->widgetsRequired - $packSize >= 0)
+            {
+                $this->assignPack(1, $packSize);
+                array_unshift($this->packSizes, $packSize);
+            }
+            
+            if($this->widgetsRequired >= 0)
+            {
+                $this->assignAnyDividable();
+            }
+        }
+    }
+    
+    protected function filterPackSizes(): WallysWidgetsCalculator
+    {
+        $this->log('filterPackSizes', null);
+        
+        arsort($this->packSizes);
+        
+        $this->packSizes = array_filter($this->packSizes, function($packSize) {
+            return $this->widgetsRequired >= $packSize;
+        });
+        
+        return $this;
     }
     
     /**
-     * This assigns the remaining widgets based on the remainder
-     * @param int $pack
+     * There is no more packSizes that will bring it to zero
+     * We loop through each and see which is the best packSize to use to bring it over
      * @return void
      */
-    private function assignAnyRemaining(int $pack): void
+    protected function assignRemaining(): void
     {
-        for($i = 1; $i <= intval(floor($this->widgetsRequired / $pack), 0); $i++):
-            $this->assignPack($pack);
-        endfor;
-    }
-    
-    /**
-     * Since the highest value is used in the pack for the first deduction, sometimes, a lower
-     * pack size may provide a better solution as seen in the test cases like 4999 5000
-     * So we compare without the highest pack size and return the assigned packs based on the comparison 
-     * @return array
-     */
-    protected function compare(): array
-    {
-        # Get the keys and sort
-        $packsUsed = array_keys(($outA = $this->packsAssigned));
-        arsort($packsUsed);
+        $this->log('assignRemaining', null);
+        arsort($this->packSizes);
         
-        # Remove the highest pack size to see if this gives a better result
-        unset($this->packSizes[array_search($packsUsed[0], $this->packSizes)]);
+        $widgetDeduction    = 0;
+        $packSizeToUse      = end($this->packSizes);
+        $quantity           = 1;
         
-        $this->compared = true;
-        $this->packsAssigned = [];
-        
-        // Re-run the test with one less pack
-        $outB = $this->getPacks($this->widgetsRequired, $this->packSizes);
-        
-        $a = 0;
-        $b = 0;
-        
-        # Addition of each to work out the remaining
-        foreach(['outA' => 'a', 'outB' => 'b'] as $out => $total)
+        foreach($this->packSizes as $packSize)
         {
-            foreach(${$out} as $pack => $quantity)
+            if(($widgetsRequired = $this->widgetsRequired - $packSize) > $widgetDeduction)
             {
-                ${$total} += $pack * $quantity;
+                $widgetDeduction = $widgetDeduction = $widgetsRequired;
+                $packSizeToUse   = $packSize;
+            }
+            else
+            {
+                foreach(range(2, 10) as $x)
+                {
+                    if(($widgetsRequired = ($this->widgetsRequired - $packSize) * $x) > $widgetDeduction)
+                    {
+                        $widgetDeduction = $widgetDeduction = $widgetsRequired;
+                        $packSizeToUse   = $packSize;
+                        $quantity        = $x;
+                    }
+                }
             }
         }
         
-        # If both are the same, assume A is the best solution
-        if($a === $b) return $outA;
+        $this->assignPack($quantity, $packSizeToUse);
+    }
+    
+    protected function compareArrayValuesSum(): array
+    {
+        $sum = $this->widgetsRequired;
+        $packToUse = [];
         
-        # Else, see which was better!
-        return $a < $b ? $outA : $outB;
+        krsort($this->potentialPackSizes);
+        
+        foreach($this->potentialPackSizes as $packsAssigned)
+        {
+            if(($newSum = array_sum(array_values($packsAssigned))) < $sum)
+            {
+                $sum = $newSum;
+                $packToUse = $packsAssigned;
+            }
+        }
+        
+        rsort($this->defaultPackSizes);
+        $currentPack = 0;
+        
+        foreach($packToUse as $packSize => $quantity)
+        {
+            $currentPack += $packSize * $quantity;
+        }
+        foreach($this->defaultPackSizes as $highestPack) {
+            if($currentPack === $this->widgetsRequired) return $packToUse;
+            if($this->widgetsRequired - $highestPack > 0) return $packToUse;
+            
+            $packToUse = $currentPack < $highestPack ? $packToUse : [$highestPack => 1];
+        }
+        
+        return $packToUse;
+    }
+    
+    private function log(string $title, string|null $message): WallysWidgetsCalculator
+    {
+        if(!$this->debug)
+        {
+            return $this;
+        }
+        
+        echo "[{$title}] : {$message} <br />";
+        echo "packSizes: " . implode(', ', array_values($this->packSizes)) . "<br />";
+        echo "widgetsRequired: {$this->widgetsRequired}<br /> <br />";
+        return $this;
     }
 }

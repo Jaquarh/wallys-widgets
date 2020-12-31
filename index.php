@@ -8,10 +8,10 @@
 
 require 'WallysWidgetsCalculator.php';
 
-$widgetsRequired = 50251;
+$widgetsRequired = 5000;
 
 $packs = (new WallysWidgetsCalculator)
-        ->getPacks($widgetsRequired, array(5000, 500));
+        ->getPacks($widgetsRequired,  array(250, 500, 1000, 2000));
 
 $cost = 0;
 
@@ -25,4 +25,4 @@ var_dump($packs);
 
 $extra = $cost - $widgetsRequired;
 
-echo "<br /> <br />Total: {$cost} - you will recieve an extra {$extra} widgets due to buying in our packs.";
+echo "<br /> <br />Total: {$cost} - you will recieve an extra {$extra} widgets due to buying in our packs. <br /> <br />";
