@@ -65,22 +65,11 @@ class WallysWidgetsCalculator
      */
     public function getPacks(int $widgetsRequired, array $packSizes, array $packSizesPotential = []): array
     {
-        /**
-         * TODO("Why does packSizes take the answer, then $packSizesPotential give another")
-         * Perhaps I need to check to see if packSizesPotential is correct and use it if it is
-         * If packSizes is not correct, assign it as a potential solution
-         
         if(!$this->isCorrectPackSize($packSizes))
         {
-            if(count($packSizesPotential) === 0 || !$this->isCorrectPackSize($packSizesPotential))
-                return $packSizes;
-            
-            $this->potentialPackSizes[] = $packSizes;
-            $packSizes = $packSizesPotential;
-            
-            return $this->getPacks($widgetsRequired, $packSizes);
+            // Fixes 4 more errors
+            $packSizes = array_unique(array_merge(array_keys($packSizes), $packSizesPotential));
         }
-         --> This returns fine on my test but when PHPUnit runs it, it fails? */
 
         $this->widgetsRequired  = $widgetsRequired;
         $this->packSizes        = $packSizes;
@@ -332,6 +321,8 @@ class WallysWidgetsCalculator
     
     protected function isCorrectPackSize(array $packSize)
     {
+        // Apparently, arsort was all that was needed to fix this from false returns in PHPUnit
+        arsort($packSize);
         return array_keys($packSize) === range(0, count($packSize) - 1);
     }
 }
