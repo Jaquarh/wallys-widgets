@@ -8,11 +8,11 @@
 
 require 'WallysWidgetsCalculator.php';
 
-$widgetsRequired = 50251;
+$widgetsRequired = 4484;
 
 // Perhaps we need to test array_keys for sure
 $packs = (new WallysWidgetsCalculator)
-        ->getPacks($widgetsRequired, [5000 => 10, 500 => 1]);
+        ->getPacks(4484, [2000 => 2, 500 => 1]);
 
 $cost = 0;
 
