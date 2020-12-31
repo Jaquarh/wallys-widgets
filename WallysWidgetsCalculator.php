@@ -89,6 +89,8 @@ class WallysWidgetsCalculator
 
         $this->widgetsRequired  = $widgetsRequired;
         $this->packSizes        = $packSizes;
+        
+        # Since we iterate over this method, we do not want to reassign any new $packSizes that have been shifted
         $this->defaultPackSizes = count($this->defaultPackSizes) === 0 ? $packSizes : $this->defaultPackSizes;
 
         if($this->hasExactMatch())
@@ -97,6 +99,10 @@ class WallysWidgetsCalculator
             return $this->getPacksAssigned();
         }
 
+        /**
+         * If there is an exact division, we still need
+         * to compare against other possible solutions.
+         */
         if(($packSize = $this->hasExactDivision()))
         {
             $this->assignAnyDividable();
@@ -136,11 +142,21 @@ class WallysWidgetsCalculator
         
     }
     
+    /**
+     * Checks for an exact match
+     * @return bool
+     */
     protected function hasExactMatch(): bool
     {
         return in_array($this->widgetsRequired, $this->packSizes);
     }
     
+    /**
+     * Assigns the $packSize and $quantity of it to the builder
+     * @param int $quantity
+     * @param int $packSize
+     * @return void
+     */
     protected function assignPack(int $quantity, int $packSize): void
     {
         $this->log('assignPack', 'BEFORE | WITH: ' . $packSize . ' * ' . $quantity);
@@ -161,16 +177,30 @@ class WallysWidgetsCalculator
         $this->packsAssigned[$packSize] = $quantity;
     }
     
+    /**
+     * Deducts the widgetsRequired
+     * @param int $widgets
+     * @return void
+     */
     protected function deductWidgets(int $widgets): void
     {
         $this->widgetsRequired -= $widgets;
     }
     
+    /**
+     * Return the builder
+     * @return array
+     */
     protected function getPacksAssigned(): array
     {
         return $this->packsAssigned;
     }
     
+    /**
+     * If there is an exact division in the widgetsRemaining and any packSizes return it
+     * Otherwise return false.
+     * @return array|bool
+     */
     protected function hasExactDivision(): array|bool
     {
         $this->log('hasExactDivision', null);
@@ -182,6 +212,10 @@ class WallysWidgetsCalculator
         }) ?? false;
     }
     
+    /**
+     * If any are dividable, calculate how many to assign and assign them
+     * @return WallysWidgetsCalculator
+     */
     protected function assignAnyDividable(): WallysWidgetsCalculator
     {
         $this->log('assignAnyDividable', null);
@@ -198,16 +232,22 @@ class WallysWidgetsCalculator
         return $this;
     }
     
+    /**
+     * This is where the magic happens
+     * @return void
+     */
     protected function assignAnyByOrder(): void
     {
         $this->log('assignAnyByOrder', null);
         
+        # Until we either hit 0 or run out of packSizes to test
         while($this->widgetsRequired >= 0)
         {
             $this->filterPackSizes();
             
             $packSize = array_shift($this->packSizes);
             
+            # We break here because we now need to figure out the best solution of bringing it negative
             if($packSize === null)
                 break;
             
@@ -224,6 +264,10 @@ class WallysWidgetsCalculator
         }
     }
     
+    /**
+     * This filters what packSizes will fit and sorts them
+     * @return WallysWidgetsCalculator#
+     */
     protected function filterPackSizes(): WallysWidgetsCalculator
     {
         $this->log('filterPackSizes', null);
@@ -335,6 +379,11 @@ class WallysWidgetsCalculator
         return $this;
     }
     
+    /**
+     * Test if the input is correctly formatted - last 5 tests give the solution as an array
+     * @param array $packSize
+     * @return type
+     */
     protected function isCorrectPackSize(array $packSize)
     {
         return array_keys($packSize) === range(0, count($packSize) - 1);
