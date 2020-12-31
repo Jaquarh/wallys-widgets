@@ -63,23 +63,35 @@ class WallysWidgetsCalculator
      * @param array $packSizes
      * @return array
      */
-    public function getPacks(int $widgetsRequired, array $packSizes): array
+    public function getPacks(int $widgetsRequired, array $packSizes, array $packSizesPotential = []): array
     {
-        /*if(!$this->isCorrectPackSize($packSizes))
+        /**
+         * TODO("Why does packSizes take the answer, then $packSizesPotential give another")
+         * Perhaps I need to check to see if packSizesPotential is correct and use it if it is
+         * If packSizes is not correct, assign it as a potential solution
+         
+        if(!$this->isCorrectPackSize($packSizes))
         {
-            return $packSizes;
-        }*/
-        
+            if(count($packSizesPotential) === 0 || !$this->isCorrectPackSize($packSizesPotential))
+                return $packSizes;
+            
+            $this->potentialPackSizes[] = $packSizes;
+            $packSizes = $packSizesPotential;
+            
+            return $this->getPacks($widgetsRequired, $packSizes);
+        }
+         --> This returns fine on my test but when PHPUnit runs it, it fails? */
+
         $this->widgetsRequired  = $widgetsRequired;
         $this->packSizes        = $packSizes;
         $this->defaultPackSizes = count($this->defaultPackSizes) === 0 ? $packSizes : $this->defaultPackSizes;
-        
+
         if($this->hasExactMatch())
         {
             $this->assignPack(1, $widgetsRequired);
             return $this->getPacksAssigned();
         }
-        
+
         if(($packSize = $this->hasExactDivision()))
         {
             $this->assignAnyDividable();
@@ -92,7 +104,7 @@ class WallysWidgetsCalculator
             $this->packSizes = $packSizes;
             $this->assignRemaining();
         }
-        
+
         $this->potentialPackSizes[] = $this->packsAssigned;
         $this->packsAssigned = [];
         
@@ -279,15 +291,19 @@ class WallysWidgetsCalculator
         }
         
         rsort($this->defaultPackSizes);
+        
         $currentPack = 0;
         
         foreach($packToUse as $packSize => $quantity)
-        {
             $currentPack += $packSize * $quantity;
-        }
-        foreach($this->defaultPackSizes as $highestPack) {
-            if($currentPack === $this->widgetsRequired) return $packToUse;
-            if($this->widgetsRequired - $highestPack > 0) return $packToUse;
+        
+        foreach($this->defaultPackSizes as $highestPack)
+        {
+            if($currentPack === $this->widgetsRequired)
+                return $packToUse;
+            
+            if($this->widgetsRequired - $highestPack > 0)
+                return $packToUse;
             
             $packToUse = $currentPack < $highestPack ? $packToUse : [$highestPack => 1];
         }
