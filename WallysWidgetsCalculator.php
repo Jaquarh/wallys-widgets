@@ -36,7 +36,7 @@ class WallysWidgetsCalculator {
      * Turns on and off debug mode
      * @var bool
      */
-    private bool $debug = true;
+    private bool $debug = false;
 
     /**
      * Since we shift arrays, we need a physical copy
