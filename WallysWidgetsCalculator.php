@@ -63,39 +63,8 @@ class WallysWidgetsCalculator
      * @param array $packSizes
      * @return array
      */
-    public function getPacks(int $widgetsRequired, array $packSizes, array $packSizesPotential = []): array
+    public function getPacks(int $widgetsRequired, array $packSizes): array
     {
-        /**
-         * TODO("Why does packSizes take the answer, then $packSizesPotential give another")
-         * Perhaps I need to check to see if packSizesPotential is correct and use it if it is
-         * If packSizes is not correct, assign it as a potential solution
-         
-        if(!$this->isCorrectPackSize($packSizes))
-        {
-            if(count($packSizesPotential) === 0 || !$this->isCorrectPackSize($packSizesPotential))
-                return $packSizes;
-            
-            $this->potentialPackSizes[] = $packSizes;
-            $packSizes = $packSizesPotential;
-            
-            return $this->getPacks($widgetsRequired, $packSizes);
-        }
-         --> This returns fine on my test but when PHPUnit runs it, it fails? */
-        
-        /*
-         * $packSizes = array_unique(array_merge(array_keys($packSizes), $packSizesPotential)); --> when this is used instead of the if(count) and return
-         * it works in index.php but fails PHPUnit
-         */
-        
-        if(!$this->isCorrectPackSize(array_unique($packSizes)))
-        {
-            if(count($packSizesPotential) === 0)
-                $this->potentialPackSizes[] = $packSizes;
-            
-            if(count($packSizesPotential) !== 0)
-                $packSizes = array_unique(array_merge(array_keys($packSizes), $packSizesPotential));
-        }
-
         $this->widgetsRequired  = $widgetsRequired;
         $this->packSizes        = $packSizes;
         
@@ -386,15 +355,5 @@ class WallysWidgetsCalculator
         echo "packSizes: " . implode(', ', array_values($this->packSizes)) . "<br />";
         echo "widgetsRequired: {$this->widgetsRequired}<br /> <br />";
         return $this;
-    }
-    
-    /**
-     * Test if the input is correctly formatted - last 5 tests give the solution as an array
-     * @param array $packSize
-     * @return type
-     */
-    protected function isCorrectPackSize(array $packSize)
-    {
-        return array_keys($packSize) === range(0, count($packSize) - 1);
     }
 }
