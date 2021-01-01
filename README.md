@@ -12,6 +12,6 @@ no longer necessary.
 
 ## Current solution
 
-Passes: 20
-Fails: 5
-Version: 2.2
+Passes: 25
+Fails: 0
+Version: 2.6
