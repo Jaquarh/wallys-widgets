@@ -12,7 +12,7 @@ $widgetsRequired = 50251;
 
 // Perhaps we need to test array_keys for sure
 $packs = (new WallysWidgetsCalculator)
-        ->getPacks($widgetsRequired, [250, 500, 5000, 2000, 1000]);
+        ->getPacks(1, [250, 500, 5000, 2000, 1000]);
 
 $cost = 0;
 

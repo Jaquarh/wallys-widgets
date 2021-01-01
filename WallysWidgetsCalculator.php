@@ -107,7 +107,10 @@ class WallysWidgetsCalculator {
 
         $this->widgetsRequired = $widgetsRequired;
 
-        return $this->TestForBetterMatch($this->compareArrayValuesSum());
+        if(count(($solution = $this->TestForBetterMatch($this->compareArrayValuesSum()))) > 0)
+                return $solution;
+        
+        return [end($this->defaultPackSizes) => 1];
     }
 
     /**
