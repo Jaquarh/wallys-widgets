@@ -1,7 +1,7 @@
 # Wallys Widgets Solution
 ## By Kyle Jeynes
 
-Since I have PHP 8.0 on my development node, I used my VPS running 7.3.24 to run all PHPUnit tests.
+Since I have PHP 8.0 on my development node, I used my VPS running 7.4 to run all PHPUnit tests.
 I had to remove the array|bool and string|null notations as well as the data type notations when declaring
 class properties.
 
