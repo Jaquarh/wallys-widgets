@@ -102,13 +102,13 @@ class WallysWidgetsCalculator {
         }
 
         if (($highestPackSize = array_shift($packSizes)) !== null && count($packSizes) !== 0) {
-            $this->getPacks($widgetsRequired, $packSizes);
+            return $this->getPacks($widgetsRequired, $packSizes);
         }
 
         $this->widgetsRequired = $widgetsRequired;
 
         if(count(($solution = $this->TestForBetterMatch($this->compareArrayValuesSum()))) > 0)
-                return $solution;
+                return $this->failSafeNeg($solution);
         
         return [end($this->defaultPackSizes) => 1];
     }
@@ -349,6 +349,27 @@ class WallysWidgetsCalculator {
                 unset($solution[$packSizeToRemove]);
                 $solution[$packSize] = 1;
             }
+        }
+        
+        return $solution;
+    }
+    
+    /**
+     * If no solution was found to bring it negative or to 0
+     * Fail safe with the highest pack size
+     * @param array $solution
+     * @return array
+     */
+    public function failSafeNeg(array $solution): array
+    {
+        $total = 0;
+        
+        foreach($solution as $packSize => $quantity)
+            $total += $packSize * $quantity;
+        
+        if($total < $this->widgetsRequired)
+        {
+            return [($packSize = array_shift($this->defaultPackSizes)) => ceil($this->widgetsRequired / $packSize)];
         }
         
         return $solution;
